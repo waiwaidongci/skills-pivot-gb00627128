@@ -27,3 +27,14 @@ def schedule(item):
 def delivery(item):
     return {'id': item.id, 'run_id': item.run_id, 'recipient': item.recipient,
             'state': item.state, 'detail': item.detail, 'created_at': iso(item.created_at)}
+
+
+def comparison(item, detail=False):
+    item_view = {'id': item.id, 'name': item.name, 'period': item.period,
+                 'old_dataset_id': item.old_dataset_id, 'new_dataset_id': item.new_dataset_id,
+                 'old_checksum': item.old_checksum, 'new_checksum': item.new_checksum,
+                 'status': item.status, 'author': item.author, 'error': item.error,
+                 'created_at': iso(item.created_at), 'finished_at': iso(item.finished_at)}
+    if detail:
+        item_view.update(result=item.result)
+    return item_view

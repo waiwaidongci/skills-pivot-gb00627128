@@ -50,3 +50,26 @@ class Delivery(Base):
     state: Mapped[str] = mapped_column(String(20))
     detail: Mapped[str] = mapped_column(String(500))
     created_at: Mapped[datetime] = mapped_column(default=now)
+
+class Comparison(Base):
+    """同月两批受理记录的差异归因，发起时锁定新旧批次。"""
+
+    __tablename__ = 'comparisons'
+    __table_args__ = (UniqueConstraint('period', 'old_dataset_id', 'new_dataset_id'),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    period: Mapped[str] = mapped_column(String(7))
+    old_dataset_id: Mapped[int] = mapped_column(ForeignKey('datasets.id'))
+    new_dataset_id: Mapped[int] = mapped_column(ForeignKey('datasets.id'))
+    old_checksum: Mapped[str] = mapped_column(String(64))
+    new_checksum: Mapped[str] = mapped_column(String(64))
+    name: Mapped[str] = mapped_column(String(120))
+    status: Mapped[str] = mapped_column(String(20), default=Status.QUEUED, index=True)
+    result: Mapped[dict | None] = mapped_column(JSON)
+    error: Mapped[str | None] = mapped_column(String(500))
+    attempt: Mapped[int] = mapped_column(default=0)
+    lease_until: Mapped[datetime | None]
+    lease_token: Mapped[str | None] = mapped_column(String(32))
+    author: Mapped[str] = mapped_column(String(64))
+    created_at: Mapped[datetime] = mapped_column(default=now)
+    finished_at: Mapped[datetime | None]

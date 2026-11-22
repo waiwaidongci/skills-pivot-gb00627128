@@ -1,6 +1,7 @@
 import logging
 import time
 from pathlib import Path
+from src.services import comparison as comparisons
 from src.services.execution import claim, execute, materialize_due
 from src.utils.wakeup import wait
 
@@ -13,12 +14,20 @@ def main():
     while True:
         try:
             materialize_due()
+            worked = False
             lease = claim()
             heartbeat.touch()
             if lease:
                 execute(lease)
+                worked = True
                 heartbeat.touch()
-            else:
+            lease = comparisons.claim()
+            heartbeat.touch()
+            if lease:
+                comparisons.execute(lease)
+                worked = True
+                heartbeat.touch()
+            if not worked:
                 wait()
         except Exception:
             log.exception('Worker cycle failed')

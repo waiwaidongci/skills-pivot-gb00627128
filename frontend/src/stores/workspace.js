@@ -18,5 +18,8 @@ export const workspace = {
   deliveries: () => call('/deliveries'),
   schedule: data => call('/schedules', data),
   disable: id => call(`/schedules/${id}/disable`, {}),
+  comparisons: () => call('/comparisons'),
+  getComparison: id => call(`/comparisons/${id}`),
+  startComparison: data => call('/comparisons', data),
   download: (path, filename) => saveFile(path, session.token, filename),
 };

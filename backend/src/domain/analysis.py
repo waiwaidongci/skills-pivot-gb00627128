@@ -10,7 +10,8 @@ _SUPPRESSED = "已抑制"
 _PROGRAM_COLUMNS = {f"program_{index}": program for index, program in enumerate(PROGRAMS, 1)}
 
 
-def _validated_intakes(rows):
+def _validated_learners(rows):
+    """Validate source rows and deduplicate to one assignment per learner and month."""
     if not isinstance(rows, (list, tuple)) or not rows:
         raise ValueError("受理明细为空，请导入至少一条受理记录。")
     records = []
@@ -39,15 +40,28 @@ def _validated_intakes(rows):
         groups[learner, day[:7]].append((day, channel, program, enrolled))
 
     intakes = []
-    for (_, period), entries in groups.items():
+    for (learner, period), entries in groups.items():
         first_day = min(entry[0] for entry in entries)
         first_assignments = {(channel, program) for day, channel, program, _ in entries if day == first_day}
         if len(first_assignments) != 1:
             raise ValueError("有学员在同月最早受理日存在多个渠道或项目，请核对原始明细后重新导入。")
         channel, program = first_assignments.pop()
         converted = any(project == program and enrolled for _, _, project, enrolled in entries)
-        intakes.append((period, channel, program, converted))
+        intakes.append((learner, period, channel, program, converted))
     return records, intakes
+
+
+def _validated_intakes(rows):
+    records, intakes = _validated_learners(rows)
+    return records, [(period, channel, program, converted)
+                     for _, period, channel, program, converted in intakes]
+
+
+def monthly_learners(rows, period):
+    """Return the monthly-report cohort keyed by learner for one statistical month."""
+    _, intakes = _validated_learners(rows)
+    return {learner: (channel, program, converted)
+            for learner, month, channel, program, converted in intakes if month == period}
 
 
 def validate_rows(rows):
